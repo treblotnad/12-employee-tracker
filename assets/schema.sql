@@ -25,4 +25,4 @@ CREATE TABLE employees(
     , manager_id INT
     , foreign key (role_id) references roles(id)
 
-)
+);
