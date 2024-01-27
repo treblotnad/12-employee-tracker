@@ -1,8 +1,6 @@
 const inquirer = require("inquirer");
 const mysqlHelper = require("./assets/mysqlHelpers");
 
-const dbHelper = new mysqlHelper();
-
 const funcList = [
   "View All Departments",
   "View All Roles",
@@ -39,17 +37,28 @@ function functionRedirect(pickedFunction) {
   eval(pickedFunc + "();");
 }
 function viewAllDepartments() {
-  console.log("departments");
-  console.log(dbHelper.viewDepts());
-  
+  const dbHelper = new mysqlHelper();
+  dbHelper.viewDepts().then(
+    setTimeout(() => {
+      runApp();
+    }, 250)
+  );
 }
 function viewAllRoles() {
-  console.log("roles");
-  runApp();
+  const dbHelper = new mysqlHelper();
+  dbHelper.viewRoles().then(
+    setTimeout(() => {
+      runApp();
+    }, 250)
+  );
 }
 function viewAllEmployees() {
-  console.log("employees");
-  runApp();
+  const dbHelper = new mysqlHelper();
+  dbHelper.viewEmployees().then(
+    setTimeout(() => {
+      runApp();
+    }, 250)
+  );
 }
 function addDepartment() {
   console.log("add dept");
@@ -84,12 +93,14 @@ function deleteSomething() {
   runApp();
 }
 function exit() {
+  const dbHelper = new mysqlHelper();
   console.log("Have a Great Day, Goodbye!");
+  dbHelper.exit();
 }
 
 function runApp() {
   inquirer
-    .prompt({ type: "list", name: "function", choices: funcList })
+    .prompt({ type: "list", name: "function", choices: funcList, pageSize: 12 })
     .then((response) => {
       functionRedirect(response.function);
     });
