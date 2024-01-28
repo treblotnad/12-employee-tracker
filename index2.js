@@ -4,6 +4,8 @@ const {
   getRoles,
   getEmployees,
   addDept,
+  getDeptId,
+  addRoleDb,
 } = require("./assets/mysqlHelper2");
 
 const funcList = [
@@ -65,9 +67,49 @@ async function addDepartment() {
       message: "Please Enter the new Department Name",
     })
     .then((response) => {
-      addDept(response.addedDept);
+      addDept(response.addedDept).then(
+        setTimeout(() => {
+          runApp();
+        }, 50)
+      );
     });
 }
+async function addRole() {
+  const deptIdObj = await getDeptId();
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "deptForRole",
+        message: "Which Dept will this roll be in?",
+        choices: deptIdObj,
+      },
+      {
+        type: "input",
+        name: "newRole",
+        message: "Please name the new role",
+      },
+      {
+        type: "input",
+        name: "roleSalary",
+        message: "Please enter role Salary",
+      },
+    ])
+    .then((response) => {
+      const pickedDept = deptIdObj.filter(
+        (element) => element.name == response.deptForRole
+      );
+      addRoleDb(pickedDept[0].id, response.newRole, response.roleSalary).then(
+        setTimeout(() => {
+          runApp();
+        }, 50)
+      );
+    });
+}
+async function addEmployee(){
+    
+}
+
 function exit() {
   console.log("Thank you, goodbye!");
 }
