@@ -35,12 +35,14 @@ async function getEmployees() {
     database: "staff",
   });
   const [rows, fields] =
-    await conn.execute(`SELECT e.first_name, e.last_name, r.title, r.salary, d.name as dept
+    await conn.execute(`SELECT e.first_name, e.last_name, r.title, r.salary, d.name as dept, CONCAT(m.first_name,' ',m.last_name) as Manager
   from employees e 
   join roles r 
   ON e.role_id = r.id 
   join departments d 
-  on r.department_id = d.id ;`);
+  on r.department_id = d.id 
+  left join employees m
+  ON e.manager_id = m.id;`);
   await conn.end();
   printTable(rows);
 }
@@ -106,6 +108,55 @@ async function addRoleDb(pickedDept, newRole, roleSalary) {
   await connUpdate.end();
   console.log(`${newRole} added to roles!`);
 }
+async function getRoleId() {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  const [rows, fields] = await conn.execute(
+    `Select id, title as name FROM roles`
+  );
+  await conn.end();
+  return rows;
+}
+async function addEmployeeDb(pickedRole, firstName, lastName, pickedManager) {
+  const connUpdate = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+
+  if (pickedManager) {
+    await connUpdate.execute(
+      `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`,
+      [firstName, lastName, pickedRole, pickedManager]
+    );
+  } else {
+    await connUpdate.execute(
+      `INSERT INTO employees (first_name, last_name, role_id) VALUES (?,?,?)`,
+      [firstName, lastName, pickedRole]
+    );
+  }
+  await connUpdate.end();
+  console.log(`${firstName} ${lastName} added to employees!`);
+}
+
+async function getEmpId() {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  const [rows, fields] = await conn.execute(
+    `Select id, concat(first_name,' ',last_name) as name FROM employees`
+  );
+  await conn.end();
+  return rows;
+}
 
 module.exports = {
   getDept,
@@ -114,4 +165,7 @@ module.exports = {
   addDept,
   getDeptId,
   addRoleDb,
+  getRoleId,
+  addEmployeeDb,
+  getEmpId,
 };

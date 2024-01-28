@@ -6,6 +6,9 @@ const {
   addDept,
   getDeptId,
   addRoleDb,
+  getRoleId,
+  addEmployeeDb,
+  getEmpId,
 } = require("./assets/mysqlHelper2");
 
 const funcList = [
@@ -19,6 +22,8 @@ const funcList = [
   `Update an Employee Manager`,
   `View Employees by Manager`,
   `View Employees by department`,
+  `View Budget`,
+  `View Budget by Department`,
   `Delete Something`,
   "Exit",
 ];
@@ -33,12 +38,14 @@ const funcObj = {
   "Update an Employee Manager": "updateManager",
   "View Employees by Manager": "viewEmployeesByManager",
   "View Employees by department": "viewEmployeesByDept",
+  "View Budget": "viewBudget",
+  "View Budget by Department": "viewBudgetByDept",
   "Delete Something": "deleteSomething",
   Exit: "exit",
 };
 function runApp() {
   inquirer
-    .prompt({ type: "list", name: "function", choices: funcList, pageSize: 12 })
+    .prompt({ type: "list", name: "function", choices: funcList, pageSize: 14 })
     .then((response) => {
       functionRedirect(response.function);
     });
@@ -106,8 +113,54 @@ async function addRole() {
       );
     });
 }
-async function addEmployee(){
-    
+async function addEmployee() {
+  const roleIdObj = await getRoleId();
+  const managerObj = await getEmpId();
+  const noBoss = { name: "None" };
+  managerObj.push(noBoss);
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "roleForEmp",
+        message: "Which Role will this Employee have?",
+        choices: roleIdObj,
+      },
+      {
+        type: "input",
+        name: "firstName",
+        message: "What is the employee's first name?",
+      },
+      {
+        type: "input",
+        name: "lastName",
+        message: "What is the employee's last name?",
+      },
+      {
+        type: "list",
+        name: "manager",
+        message: "Who will the employee report to?",
+        choices: managerObj,
+      },
+    ])
+    .then((response) => {
+      const pickedRole = roleIdObj.filter(
+        (element) => element.name == response.roleForEmp
+      );
+      const pickedManager = managerObj.filter(
+        (element) => element.name == response.manager
+      );
+      addEmployeeDb(
+        pickedRole[0].id,
+        response.firstName,
+        response.lastName,
+        pickedManager[0].id
+      ).then(
+        setTimeout(() => {
+          runApp();
+        }, 50)
+      );
+    });
 }
 
 function exit() {
