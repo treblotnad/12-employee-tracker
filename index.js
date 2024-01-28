@@ -41,7 +41,7 @@ function viewAllDepartments() {
   dbHelper.viewDepts().then(
     setTimeout(() => {
       runApp();
-    }, 250)
+    }, 50)
   );
 }
 function viewAllRoles() {
@@ -49,7 +49,7 @@ function viewAllRoles() {
   dbHelper.viewRoles().then(
     setTimeout(() => {
       runApp();
-    }, 250)
+    }, 50)
   );
 }
 function viewAllEmployees() {
@@ -57,16 +57,60 @@ function viewAllEmployees() {
   dbHelper.viewEmployees().then(
     setTimeout(() => {
       runApp();
-    }, 250)
+    }, 50)
   );
 }
 function addDepartment() {
-  console.log("add dept");
-  runApp();
+  inquirer
+    .prompt({
+      type: "input",
+      name: "addedDept",
+      message: "Please Enter the new Department Name",
+    })
+    .then((response) => {
+      const addedDept = response.addedDept;
+      const dbHelper = new mysqlHelper();
+      dbHelper.addDept(addedDept).then(
+        setTimeout(() => {
+          runApp();
+        }, 50)
+      );
+    });
 }
-function addRole() {
-  console.log("add role");
-  runApp();
+async function addRole() {
+  const dbHelper = new mysqlHelper();
+  await dbHelper.deptListReturn().then((stuff) => console.log(stuff));
+  //   inquirer
+  //     .prompt([
+  //       {
+  //         type: "input",
+  //         name: "addedRole",
+  //         message: "Please Enter the new Department Name",
+  //       },
+  //       {
+  //         type: "input",
+  //         name: "addedSalary",
+  //         message: "Please Enter Salary for this Role",
+  //       },
+  //       // {
+  //       //   type: "list",
+  //       //   name: "pickedDept",
+  //       //   message: "Which Department is this role in?",
+  //       //   choices: deptChoiceList,
+  //       // },
+  //     ])
+  //     .then((response) => {
+  //       console.log(response);
+  //       //   const addedRole = response.addedRole;
+  //       //   const addedSalary = response.addedSalary;
+  //       //   const pickedDept = response.pickedDept;
+  //       //   const dbHelper = new mysqlHelper();
+  //       // //   dbHelper.addRole(addedRole, addedSalary, pickedDept).then(
+  //       // //     setTimeout(() => {
+  //       // //       runApp();
+  //       // //     }, 50)
+  //       // //   );
+  //     });
 }
 function addEmployee() {
   console.log("add employee");
