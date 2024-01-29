@@ -1,5 +1,20 @@
 const inquirer = require("inquirer");
-const mysqlHelper = require("./assets/mysqlHelpers");
+const {
+  getDept,
+  getRoles,
+  getEmployees,
+  addDept,
+  getDeptId,
+  addRoleDb,
+  getRoleId,
+  addEmployeeDb,
+  getEmpId,
+  updateEmpRole,
+  updateEmpManager,
+  getManagers,
+  getByManager,
+  getByDept,
+} = require("./assets/mysqlHelper2");
 
 const funcList = [
   "View All Departments",
@@ -12,10 +27,11 @@ const funcList = [
   `Update an Employee Manager`,
   `View Employees by Manager`,
   `View Employees by department`,
+  `View Budget`,
+  `View Budget by Department`,
   `Delete Something`,
   "Exit",
 ];
-
 const funcObj = {
   "View All Departments": "viewAllDepartments",
   "View All Roles": "viewAllRoles",
@@ -27,50 +43,43 @@ const funcObj = {
   "Update an Employee Manager": "updateManager",
   "View Employees by Manager": "viewEmployeesByManager",
   "View Employees by department": "viewEmployeesByDept",
+  "View Budget": "viewBudget",
+  "View Budget by Department": "viewBudgetByDept",
   "Delete Something": "deleteSomething",
   Exit: "exit",
 };
-
+function runApp() {
+  inquirer
+    .prompt({ type: "list", name: "function", choices: funcList, pageSize: 14 })
+    .then((response) => {
+      functionRedirect(response.function);
+    });
+}
 function functionRedirect(pickedFunction) {
-  //   console.log(pickedFunction);
   const pickedFunc = funcObj[pickedFunction];
   eval(pickedFunc + "();");
 }
-function viewAllDepartments() {
-  const dbHelper = new mysqlHelper();
-  dbHelper.viewDepts().then(
-    setTimeout(() => {
-      runApp();
-    }, 50)
-  );
+async function viewAllDepartments() {
+  await getDept();
+  runApp();
 }
-function viewAllRoles() {
-  const dbHelper = new mysqlHelper();
-  dbHelper.viewRoles().then(
-    setTimeout(() => {
-      runApp();
-    }, 50)
-  );
+async function viewAllRoles() {
+  await getRoles();
+  runApp();
 }
-function viewAllEmployees() {
-  const dbHelper = new mysqlHelper();
-  dbHelper.viewEmployees().then(
-    setTimeout(() => {
-      runApp();
-    }, 50)
-  );
+async function viewAllEmployees() {
+  await getEmployees();
+  runApp();
 }
-function addDepartment() {
-  inquirer
+async function addDepartment() {
+  await inquirer
     .prompt({
       type: "input",
       name: "addedDept",
       message: "Please Enter the new Department Name",
     })
     .then((response) => {
-      const addedDept = response.addedDept;
-      const dbHelper = new mysqlHelper();
-      dbHelper.addDept(addedDept).then(
+      addDept(response.addedDept).then(
         setTimeout(() => {
           runApp();
         }, 50)
@@ -78,76 +87,197 @@ function addDepartment() {
     });
 }
 async function addRole() {
-  const dbHelper = new mysqlHelper();
-  await dbHelper.deptListReturn().then((stuff) => console.log(stuff));
-  //   inquirer
-  //     .prompt([
-  //       {
-  //         type: "input",
-  //         name: "addedRole",
-  //         message: "Please Enter the new Department Name",
-  //       },
-  //       {
-  //         type: "input",
-  //         name: "addedSalary",
-  //         message: "Please Enter Salary for this Role",
-  //       },
-  //       // {
-  //       //   type: "list",
-  //       //   name: "pickedDept",
-  //       //   message: "Which Department is this role in?",
-  //       //   choices: deptChoiceList,
-  //       // },
-  //     ])
-  //     .then((response) => {
-  //       console.log(response);
-  //       //   const addedRole = response.addedRole;
-  //       //   const addedSalary = response.addedSalary;
-  //       //   const pickedDept = response.pickedDept;
-  //       //   const dbHelper = new mysqlHelper();
-  //       // //   dbHelper.addRole(addedRole, addedSalary, pickedDept).then(
-  //       // //     setTimeout(() => {
-  //       // //       runApp();
-  //       // //     }, 50)
-  //       // //   );
-  //     });
-}
-function addEmployee() {
-  console.log("add employee");
-  runApp();
-}
-function updateRole() {
-  console.log("updateRole");
-  runApp();
-}
-function updateManager() {
-  console.log("update Manager");
-  runApp();
-}
-function viewEmployeesByManager() {
-  console.log("view employees by manager");
-  runApp();
-}
-function viewEmployeesByDept() {
-  console.log("view employees by dept");
-  runApp();
-}
-function deleteSomething() {
-  console.log("delete something");
-  runApp();
-}
-function exit() {
-  const dbHelper = new mysqlHelper();
-  console.log("Have a Great Day, Goodbye!");
-  dbHelper.exit();
-}
-
-function runApp() {
-  inquirer
-    .prompt({ type: "list", name: "function", choices: funcList, pageSize: 12 })
+  const deptIdObj = await getDeptId();
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "deptForRole",
+        message: "Which Dept will this roll be in?",
+        choices: deptIdObj,
+      },
+      {
+        type: "input",
+        name: "newRole",
+        message: "Please name the new role",
+      },
+      {
+        type: "input",
+        name: "roleSalary",
+        message: "Please enter role Salary",
+      },
+    ])
     .then((response) => {
-      functionRedirect(response.function);
+      const pickedDept = deptIdObj.filter(
+        (element) => element.name == response.deptForRole
+      );
+      addRoleDb(pickedDept[0].id, response.newRole, response.roleSalary).then(
+        setTimeout(() => {
+          runApp();
+        }, 50)
+      );
+    });
+}
+async function addEmployee() {
+  const roleIdObj = await getRoleId();
+  const managerObj = await getEmpId();
+  const noBoss = { name: "None" };
+  managerObj.push(noBoss);
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "roleForEmp",
+        message: "Which Role will this Employee have?",
+        choices: roleIdObj,
+      },
+      {
+        type: "input",
+        name: "firstName",
+        message: "What is the employee's first name?",
+      },
+      {
+        type: "input",
+        name: "lastName",
+        message: "What is the employee's last name?",
+      },
+      {
+        type: "list",
+        name: "manager",
+        message: "Who will the employee report to?",
+        choices: managerObj,
+      },
+    ])
+    .then((response) => {
+      const pickedRole = roleIdObj.filter(
+        (element) => element.name == response.roleForEmp
+      );
+      const pickedManager = managerObj.filter(
+        (element) => element.name == response.manager
+      );
+      addEmployeeDb(
+        pickedRole[0].id,
+        response.firstName,
+        response.lastName,
+        pickedManager[0].id
+      ).then(
+        setTimeout(() => {
+          runApp();
+        }, 50)
+      );
     });
 }
 
+async function updateRole() {
+  const EmpIdObj = await getEmpId();
+  const roleIdObj = await getRoleId();
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "name",
+        message: "Which Employee Role is being updated?",
+        choices: EmpIdObj,
+      },
+      {
+        type: "list",
+        name: "roleForEmp",
+        message: "Which Role will this Employee have?",
+        choices: roleIdObj,
+      },
+    ])
+    .then((response) => {
+      const pickedRole = roleIdObj.filter(
+        (element) => element.name == response.roleForEmp
+      );
+      const pickedEmp = EmpIdObj.filter(
+        (element) => element.name == response.name
+      );
+      updateEmpRole(pickedRole, pickedEmp).then(
+        setTimeout(() => {
+          runApp();
+        }, 50)
+      );
+    });
+}
+
+async function updateManager() {
+  const EmpIdObj = await getEmpId();
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "name",
+        message: "Which Employee's manager is being updated?",
+        choices: EmpIdObj,
+      },
+      {
+        type: "list",
+        name: "manager",
+        message: "Who is the manager?",
+        choices: EmpIdObj,
+      },
+    ])
+    .then((response) => {
+      const pickedManager = EmpIdObj.filter(
+        (element) => element.name == response.manager
+      );
+      const pickedEmp = EmpIdObj.filter(
+        (element) => element.name == response.name
+      );
+      updateEmpManager(pickedManager, pickedEmp).then(
+        setTimeout(() => {
+          runApp();
+        }, 50)
+      );
+    });
+}
+async function viewEmployeesByManager() {
+  const managerIdObj = await getManagers();
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "name",
+        message: "Which Manager's Employees do you want to see?",
+        choices: managerIdObj,
+      },
+    ])
+    .then((response) => {
+      const pickedManager = managerIdObj.filter(
+        (element) => element.name == response.name
+      );
+      getByManager(pickedManager).then(
+        setTimeout(() => {
+          runApp();
+        }, 50)
+      );
+    });
+}
+async function viewEmployeesByDept() {
+  const deptIdObj = await getDeptId();
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "name",
+        message: "Which Departments's Employees do you want to see?",
+        choices: deptIdObj,
+      },
+    ])
+    .then((response) => {
+      const pickedDept = deptIdObj.filter(
+        (element) => element.name == response.name
+      );
+      getByDept(pickedDept).then(
+        setTimeout(() => {
+          runApp();
+        }, 50)
+      );
+    });
+}
+
+function exit() {
+  console.log("Thank you, goodbye!");
+}
 runApp();

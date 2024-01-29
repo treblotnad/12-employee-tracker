@@ -20,3 +20,8 @@ VALUES ("test");
   on r.department_id = d.id 
   join employees m
   ON e.manager_id = m.id;
+
+
+UPDATE employees
+SET role_id = pickedRole
+Where id = pickedEmp;

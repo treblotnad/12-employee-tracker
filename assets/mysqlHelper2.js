@@ -8,7 +8,7 @@ async function getDept() {
     password: "password",
     database: "staff",
   });
-  const [rows, fields] = await conn.execute(`SELECT name FROM departments`);
+  const [rows, fields] = await conn.execute(`SELECT * FROM departments`);
   await conn.end();
   printTable(rows);
 }
@@ -20,7 +20,7 @@ async function getRoles() {
     database: "staff",
   });
   const [rows, fields] =
-    await conn.execute(`SELECT r.title, r.salary, d.name as dept
+    await conn.execute(`SELECT r.id, r.title, r.salary, d.name as dept
   from roles r 
   join departments d  
   ON r.department_id = d.id;`);
@@ -35,7 +35,7 @@ async function getEmployees() {
     database: "staff",
   });
   const [rows, fields] =
-    await conn.execute(`SELECT e.first_name, e.last_name, r.title, r.salary, d.name as dept, CONCAT(m.first_name,' ',m.last_name) as Manager
+    await conn.execute(`SELECT e.id, e.first_name, e.last_name, r.title, r.salary, d.name as dept, CONCAT(m.first_name,' ',m.last_name) as Manager
   from employees e 
   join roles r 
   ON e.role_id = r.id 
@@ -158,6 +158,96 @@ async function getEmpId() {
   return rows;
 }
 
+async function updateEmpRole(pickedRole, pickedEmp) {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  await conn.execute(`UPDATE employees SET role_id = ? WHERE id = ?`, [
+    pickedRole[0].id,
+    pickedEmp[0].id,
+  ]);
+  await conn.end();
+  console.log(`Updated ${pickedEmp[0].name}'s role to ${pickedRole[0].name}`);
+}
+
+async function updateEmpManager(pickedManager, pickedEmp) {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  await conn.execute(`UPDATE employees SET manager_id = ? WHERE id = ?`, [
+    pickedManager[0].id,
+    pickedEmp[0].id,
+  ]);
+  await conn.end();
+  console.log(
+    `Updated ${pickedEmp[0].name}'s manager to ${pickedManager[0].name}`
+  );
+}
+
+async function getManagers() {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  const [rows, fields] = await conn.execute(
+    `Select m.id, concat(m.first_name,' ',m.last_name) as name FROM employees e JOIN employees m ON e.manager_id= m.id`
+  );
+  await conn.end();
+  return rows;
+}
+
+async function getByManager(pickedManager) {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  const [rows, fields] = await conn.execute(
+    `SELECT e.id, e.first_name, e.last_name, r.title, r.salary, d.name as dept
+    from employees e 
+    join roles r 
+    ON e.role_id = r.id 
+    join departments d 
+    on r.department_id = d.id 
+    WHERE manager_id = ?
+    ;`,
+    [pickedManager[0].id]
+  );
+  await conn.end();
+  printTable(rows);
+}
+
+async function getByDept(pickedDept) {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  const [rows, fields] = await conn.execute(
+    `SELECT e.id, e.first_name, e.last_name, r.title, r.salary, d.name as dept
+  from employees e 
+  join roles r 
+  ON e.role_id = r.id 
+  join departments d 
+  on r.department_id = d.id 
+  WHERE r.department_id = ?
+  ;`,
+    [pickedDept[0].id]
+  );
+  await conn.end();
+  printTable(rows);
+}
+
 module.exports = {
   getDept,
   getRoles,
@@ -168,4 +258,9 @@ module.exports = {
   getRoleId,
   addEmployeeDb,
   getEmpId,
+  updateEmpRole,
+  updateEmpManager,
+  getManagers,
+  getByManager,
+  getByDept,
 };
