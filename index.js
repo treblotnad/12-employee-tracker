@@ -53,6 +53,21 @@ const funcObj = {
   "Delete Something": "deleteSomething",
   Exit: "exit",
 };
+
+const textValidate = async (input) => {
+  if (input.length < 1) {
+    return "Inputs must be at least 1 character long";
+  }
+  return true;
+};
+
+const numValidate = async (input) => {
+  if (!(input % 1 == 0)) {
+    return "Salary must be a number!";
+  }
+  return true;
+};
+
 function runApp() {
   inquirer
     .prompt({ type: "list", name: "function", choices: funcList, pageSize: 14 })
@@ -82,6 +97,7 @@ async function addDepartment() {
       type: "input",
       name: "addedDept",
       message: "Please Enter the new Department Name",
+      validate: textValidate,
     })
     .then((response) => {
       addDept(response.addedDept).then(
@@ -105,11 +121,13 @@ async function addRole() {
         type: "input",
         name: "newRole",
         message: "Please name the new role",
+        validate: textValidate,
       },
       {
         type: "input",
         name: "roleSalary",
         message: "Please enter role Salary",
+        validate: numValidate,
       },
     ])
     .then((response) => {
@@ -140,11 +158,13 @@ async function addEmployee() {
         type: "input",
         name: "firstName",
         message: "What is the employee's first name?",
+        validate: textValidate,
       },
       {
         type: "input",
         name: "lastName",
         message: "What is the employee's last name?",
+        validate: textValidate,
       },
       {
         type: "list",
