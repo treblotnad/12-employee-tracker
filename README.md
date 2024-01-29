@@ -29,7 +29,9 @@ Requires node.js@18+
 
 ## Usage
 
-Link to Video --> NEED TO ADD
+Link to Video
+https://drive.google.com/file/d/1UsPSxzFBmDtC2_Z6lPZ-G4rHj68xjOp7/view?usp=sharing
+
 
 ## Credits
 
