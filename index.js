@@ -14,6 +14,11 @@ const {
   getManagers,
   getByManager,
   getByDept,
+  getBudget,
+  deleteDept,
+  deleteRole,
+  deleteEmp,
+  changeDept,
 } = require("./assets/mysqlHelper2");
 
 const funcList = [
@@ -25,10 +30,10 @@ const funcList = [
   "Add an Employee",
   `Update an Employee Role`,
   `Update an Employee Manager`,
+  "Update Department for Role",
   `View Employees by Manager`,
   `View Employees by department`,
   `View Budget`,
-  `View Budget by Department`,
   `Delete Something`,
   "Exit",
 ];
@@ -41,10 +46,10 @@ const funcObj = {
   "Add an Employee": "addEmployee",
   "Update an Employee Role": "updateRole",
   "Update an Employee Manager": "updateManager",
+  "Update Department for Role": "updateRoleDept",
   "View Employees by Manager": "viewEmployeesByManager",
   "View Employees by department": "viewEmployeesByDept",
   "View Budget": "viewBudget",
-  "View Budget by Department": "viewBudgetByDept",
   "Delete Something": "deleteSomething",
   Exit: "exit",
 };
@@ -232,6 +237,40 @@ async function updateManager() {
       );
     });
 }
+
+async function updateRoleDept() {
+  const deptIdObj = await getDeptId();
+  const roleIdObj = await getRoleId();
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "role",
+        message: "Which Roll needs to change Departments?",
+        choices: roleIdObj,
+      },
+      {
+        type: "list",
+        name: "dept",
+        message: "Which Department will role be added to?",
+        choices: deptIdObj,
+      },
+    ])
+    .then((response) => {
+      const pickedRole = roleIdObj.filter(
+        (element) => element.name == response.role
+      );
+      const pickedDept = deptIdObj.filter(
+        (element) => element.name == response.dept
+      );
+      changeDept(pickedRole, pickedDept).then(
+        setTimeout(() => {
+          runApp();
+        }, 50)
+      );
+    });
+}
+
 async function viewEmployeesByManager() {
   const managerIdObj = await getManagers();
   await inquirer
@@ -274,6 +313,98 @@ async function viewEmployeesByDept() {
           runApp();
         }, 50)
       );
+    });
+}
+
+async function viewBudget() {
+  getBudget().then(
+    setTimeout(() => {
+      runApp();
+    }, 50)
+  );
+}
+
+async function deleteSomething() {
+  const deleteChoice = ["Department", "Role", "Employee"];
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "choiceDelete",
+        message: "What do you want to delete?",
+        choices: deleteChoice,
+      },
+    ])
+    .then(async (response) => {
+      if (response.choiceDelete == "Department") {
+        console.log(response.choiceDelete);
+        const deptIdObj = await getDeptId();
+        await inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "name",
+              message: "Which Department do you want to delete?",
+              choices: deptIdObj,
+            },
+          ])
+          .then((response) => {
+            const pickedDept = deptIdObj.filter(
+              (element) => element.name == response.name
+            );
+            deleteDept(pickedDept).then(
+              setTimeout(() => {
+                runApp();
+              }, 50)
+            );
+          });
+      }
+      if (response.choiceDelete == "Role") {
+        console.log(response.choiceDelete);
+        const roleIdObj = await getRoleId();
+        await inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "name",
+              message: "Which role do you want to delete?",
+              choices: roleIdObj,
+            },
+          ])
+          .then((response) => {
+            const pickedRole = roleIdObj.filter(
+              (element) => element.name == response.name
+            );
+            deleteRole(pickedRole).then(
+              setTimeout(() => {
+                runApp();
+              }, 50)
+            );
+          });
+      }
+      if (response.choiceDelete == "Employee") {
+        console.log(response.choiceDelete);
+        const empIdObj = await getEmpId();
+        await inquirer
+          .prompt([
+            {
+              type: "list",
+              name: "name",
+              message: "Which employee do you want to delete?",
+              choices: empIdObj,
+            },
+          ])
+          .then((response) => {
+            const pickedEmp = empIdObj.filter(
+              (element) => element.name == response.name
+            );
+            deleteEmp(pickedEmp).then(
+              setTimeout(() => {
+                runApp();
+              }, 50)
+            );
+          });
+      }
     });
 }
 

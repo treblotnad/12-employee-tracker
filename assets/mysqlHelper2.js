@@ -22,7 +22,7 @@ async function getRoles() {
   const [rows, fields] =
     await conn.execute(`SELECT r.id, r.title, r.salary, d.name as dept
   from roles r 
-  join departments d  
+  left join departments d  
   ON r.department_id = d.id;`);
   await conn.end();
   printTable(rows);
@@ -37,9 +37,9 @@ async function getEmployees() {
   const [rows, fields] =
     await conn.execute(`SELECT e.id, e.first_name, e.last_name, r.title, r.salary, d.name as dept, CONCAT(m.first_name,' ',m.last_name) as Manager
   from employees e 
-  join roles r 
+  left join roles r 
   ON e.role_id = r.id 
-  join departments d 
+  left join departments d 
   on r.department_id = d.id 
   left join employees m
   ON e.manager_id = m.id;`);
@@ -248,6 +248,75 @@ async function getByDept(pickedDept) {
   printTable(rows);
 }
 
+async function getBudget() {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  const [rows, fields] = await conn.execute(
+    `SELECT d.name, sum(salary) from employees e JOIN roles r ON e.role_id=r.id
+    JOIN departments d ON r.department_id = d.id
+    GROUP BY d.name;`
+  );
+  await conn.end();
+  printTable(rows);
+}
+
+async function deleteDept(pickedDept) {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  await conn.execute(`DELETE FROM departments WHERE id=?`, [pickedDept[0].id]);
+  await conn.end();
+  console.log(`${pickedDept[0].name} has been deleted!`);
+}
+
+async function deleteRole(pickedRole) {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  await conn.execute(`DELETE FROM roles WHERE id=?`, [pickedRole[0].id]);
+  await conn.end();
+  console.log(`${pickedRole[0].name} has been deleted!`);
+}
+
+async function deleteEmp(pickedEmp) {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  await conn.execute(`DELETE FROM employees WHERE id=?`, [pickedEmp[0].id]);
+  await conn.end();
+  console.log(`${pickedEmp[0].name} has been deleted!`);
+}
+
+async function changeDept(pickedRole, pickedDept) {
+  const conn = await mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    database: "staff",
+  });
+  await conn.execute(`UPDATE roles SET department_id = ? WHERE id = ?`, [
+    pickedDept[0].id,
+    pickedRole[0].id,
+  ]);
+  await conn.end();
+  console.log(
+    `${pickedRole[0].name}'s department has been changed to ${pickedDept[0].name}`
+  );
+}
+
 module.exports = {
   getDept,
   getRoles,
@@ -263,4 +332,9 @@ module.exports = {
   getManagers,
   getByManager,
   getByDept,
+  getBudget,
+  deleteDept,
+  deleteRole,
+  deleteEmp,
+  changeDept,
 };
